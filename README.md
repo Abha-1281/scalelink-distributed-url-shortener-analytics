@@ -178,13 +178,4 @@ k6 run load-tests/create-benchmark.js
 - **p99 Latency:** `7.4ms` (SLA `< 25ms` passed)
 - **Cache Hit Rate:** `> 98%` under sustained traffic.
 
----
 
-## 7. Senior Interview Talking Points
-
-| Interviewer Question | Senior Architectural Response |
-| :--- | :--- |
-| *"Why did you use HTTP 302 instead of 301 for redirects?"* | **"HTTP 301 is permanently cached by client browsers.** If we returned 301, subsequent clicks from the same user would never touch our servers, causing us to lose all clickstream analytics. 302 ensures the browser verifies with our gateway on every click." |
-| *"How did you prevent Database collapse from non-existent URLs?"* | **"I implemented a distributed Bloom Filter in Redis using Murmur3 bit hashing.** Non-existent keys are rejected in 0.2ms before touching PostgreSQL, eliminating Cache Penetration attacks." |
-| *"Why not just use database auto-increment for IDs?"* | **"Auto-incrementing sequences create a centralized write bottleneck and single point of failure.** I implemented the Twitter Snowflake algorithm so every node generates time-sortable 64-bit unique IDs independently in memory, scaling to 4 million IDs/sec per node." |
-| *"How do you trace an event from HTTP redirect through Kafka to Python?"* | **"OpenTelemetry with W3C Context Propagation.** The Gateway and Java service inject the `traceparent` header into the Kafka record metadata, and the Python consumer extracts it, providing an unbroken distributed trace across all services in Jaeger." |
