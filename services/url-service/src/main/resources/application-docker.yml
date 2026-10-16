@@ -1,0 +1,22 @@
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/link_db
+    username: postgres
+    password: postgres
+
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+  kafka:
+    bootstrap-servers: kafka:29092
+
+management:
+  otlp:
+    tracing:
+      endpoint: http://jaeger:4318/v1/traces

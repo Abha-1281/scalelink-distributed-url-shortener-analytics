@@ -1,0 +1,139 @@
+{
+  "info": {
+    "_postman_id": "9b12e345-6789-4abc-def0-123456789abc",
+    "name": "ScaleLink & StreamPulse API Collection",
+    "description": "Production-grade Distributed URL Shortener and Real-Time Clickstream Analytics Engine",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8088",
+      "type": "string"
+    },
+    {
+      "key": "shortCode",
+      "value": "portfolio",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Gateway Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        },
+        "description": "Verifies that the Nginx API Gateway is active and routing."
+      },
+      "response": []
+    },
+    {
+      "name": "2. Create Short URL (Write Path)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"longUrl\": \"https://google.com/search?q=system-design-interview\",\n  \"customAlias\": \"postmantest\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/urls",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "urls"]
+        },
+        "description": "Creates a shortened link using Snowflake 64-bit ID generator, saves to link_db, updates Redis Bloom filter and cache."
+      },
+      "response": []
+    },
+    {
+      "name": "3. Fast 302 Redirection (Read Path)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "User-Agent",
+            "value": "PostmanRuntime/7.42.0",
+            "type": "text"
+          },
+          {
+            "key": "Referer",
+            "value": "https://postman.com",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/{{shortCode}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["{{shortCode}}"]
+        },
+        "description": "Resolves the short code into an HTTP 302 redirect via Redis Cache-Aside in <5ms and fires an async click event to Kafka."
+      },
+      "response": []
+    },
+    {
+      "name": "4. Query Analytics Summary",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/analytics/{{shortCode}}/summary",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "analytics", "{{shortCode}}", "summary"]
+        },
+        "description": "Returns high-level click counts and traffic status from PostgreSQL analytics_db."
+      },
+      "response": []
+    },
+    {
+      "name": "5. Query Demographic Breakdown",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/analytics/{{shortCode}}/breakdown",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "analytics", "{{shortCode}}", "breakdown"]
+        },
+        "description": "Returns categorical breakdown by Country, Device Type (Mobile/Desktop), and Browser Family."
+      },
+      "response": []
+    },
+    {
+      "name": "6. Query Hourly Time-Series",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/analytics/{{shortCode}}/time-series?limit=24",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "analytics", "{{shortCode}}", "time-series"],
+          "query": [
+            {
+              "key": "limit",
+              "value": "24",
+              "description": "Number of hours to return"
+            }
+          ]
+        },
+        "description": "Returns timeseries data aggregated in hourly buckets for dashboards."
+      },
+      "response": []
+    }
+  ]
+}
